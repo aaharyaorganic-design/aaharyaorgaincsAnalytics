@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aaharya Growth Dashboard</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#FBF6EC; --card:#FFFFFF; --ink:#22301A; --muted:#6B7563; --line:#E8E0CF;
+  --olive:#3E552D; --green:#2F4A1E; --gold:#C8963E; --gold2:#F2B544; --cream:#FFF6E5;
+  --good:#2F7D32; --bad:#B3402F; --chip:#F1EAD9;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#151A11; --card:#1E2618; --ink:#EEF1E6; --muted:#A4AD98; --line:#2F3A27;
+  --olive:#8FB070; --green:#A9C98A; --gold:#E2B565; --gold2:#F2C66A; --cream:#2A3322;
+  --good:#7CC47F; --bad:#E58A79; --chip:#28321F;
+}}
+:root[data-theme="dark"]{
+  --bg:#151A11; --card:#1E2618; --ink:#EEF1E6; --muted:#A4AD98; --line:#2F3A27;
+  --olive:#8FB070; --green:#A9C98A; --gold:#E2B565; --gold2:#F2C66A; --cream:#2A3322;
+  --good:#7CC47F; --bad:#E58A79; --chip:#28321F;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 Inter,system-ui,sans-serif}
+.wrap{max-width:1240px;margin:0 auto;padding:20px 16px 60px}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:18px}
+h1{font:600 26px/1.1 Fraunces,Georgia,serif;margin:0;color:var(--green)}
+h1 small{display:block;font:500 12px Inter,sans-serif;color:var(--muted);margin-top:4px;letter-spacing:.02em}
+h2{font:600 18px Fraunces,Georgia,serif;margin:0 0 4px;color:var(--green)}
+.sub{color:var(--muted);font-size:12.5px;margin:0 0 12px}
+.controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.seg{display:flex;background:var(--chip);border-radius:10px;padding:3px}
+.seg button{border:0;background:none;color:var(--ink);padding:7px 12px;border-radius:8px;font:500 13px Inter;cursor:pointer}
+.seg button.on{background:var(--olive);color:#fff}
+.btn{border:1px solid var(--line);background:var(--card);color:var(--ink);padding:7px 12px;border-radius:10px;font:500 13px Inter;cursor:pointer}
+.updated{color:var(--muted);font-size:12px}
+.notice{background:var(--cream);border:1px solid var(--line);border-left:4px solid var(--gold);padding:10px 14px;border-radius:10px;margin-bottom:14px;font-size:13px}
+.notice:empty{display:none}
+.grid{display:grid;gap:14px}
+.kpis{grid-template-columns:repeat(4,1fr)}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.kpi .l{color:var(--muted);font-size:12px;font-weight:500}
+.kpi .v{font:600 24px/1.2 Inter;margin-top:4px;font-variant-numeric:tabular-nums}
+.kpi .h{color:var(--muted);font-size:11.5px;margin-top:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;min-width:0}
+.two{grid-template-columns:1fr 1fr}
+.three{grid-template-columns:repeat(3,1fr)}
+.span2{grid-column:span 2}
+section{margin-top:26px}
+.sectionhead{display:flex;align-items:baseline;gap:10px;margin-bottom:10px}
+.tag{font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;background:var(--chip);color:var(--muted)}
+.chartbox{position:relative;height:260px}
+.chartbox.sm{height:220px}
+table{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+th{text-align:left;color:var(--muted);font-weight:500;font-size:12px;border-bottom:1px solid var(--line);padding:7px 8px;white-space:nowrap}
+td{border-bottom:1px solid var(--line);padding:7px 8px}
+td.n,th.n{text-align:right}
+#tRecent td:first-child{white-space:nowrap}
+tr:last-child td{border-bottom:0}
+.scroll{overflow-x:auto}
+.funnel .row{display:grid;grid-template-columns:120px 1fr 70px;gap:10px;align-items:center;margin:7px 0}
+.funnel .lab{font-size:12.5px;color:var(--muted)}
+.funnel .bar{height:24px;background:var(--chip);border-radius:6px;overflow:hidden}
+.funnel .bar i{display:block;height:100%;background:var(--olive);border-radius:6px}
+.funnel .val{text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
+.funnel .drop{grid-column:2/4;font-size:11.5px;color:var(--muted);margin:-4px 0 0}
+.pill{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11.5px;font-weight:500;background:var(--chip)}
+.pill.Delivered,.pill.Confirmed,.pill.Shipped{color:var(--good)}
+.pill.Cancelled,.pill.Payment{color:var(--bad)}
+.empty{color:var(--muted);font-size:13px;padding:18px 0;text-align:center}
+.minis{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mini{background:var(--chip);border-radius:10px;padding:10px 12px}
+.mini .l{font-size:11.5px;color:var(--muted)} .mini .v{font-weight:600;font-size:18px}
+#login{display:none;max-width:340px;margin:12vh auto;text-align:center}
+#login input{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;margin:12px 0;background:var(--card);color:var(--ink);font:14px Inter}
+@media (max-width:900px){.kpis{grid-template-columns:repeat(2,1fr)}.two,.three{grid-template-columns:1fr}.span2{grid-column:auto}}
+@media (max-width:420px){.kpi .v{font-size:20px}.funnel .row{grid-template-columns:96px 1fr 56px}}
+</style>
+</head>
+<body>
+<div id="login" class="card">
+  <h2>Aaharya Dashboard</h2>
+  <p class="sub">Enter the dashboard password</p>
+  <input id="pw" type="password" autocomplete="current-password">
+  <button class="btn" onclick="savePw()">Open</button>
+</div>
+
+<div class="wrap" id="app" style="display:none">
+<header>
+  <h1>Aaharya Organics<small>Growth dashboard · Meta Ads · Google Analytics · Website orders</small></h1>
+  <div class="controls">
+    <div class="seg" id="range">
+      <button data-d="1">Today</button><button data-d="7" class="on">7 days</button><button data-d="30">30 days</button><button data-d="90">90 days</button>
+    </div>
+    <button class="btn" id="refreshBtn" title="Fetch fresh numbers now">↻ Refresh</button>
+    <span class="updated" id="updated"></span>
+  </div>
+</header>
+
+<div class="notice" id="notice"></div>
+
+<div class="grid kpis" id="kpis"></div>
+
+<section>
+  <div class="sectionhead"><h2>Sales vs ad spend</h2><span class="tag">Daily</span></div>
+  <div class="card"><div class="chartbox"><canvas id="cTrend"></canvas></div></div>
+</section>
+
+<section>
+  <div class="sectionhead"><h2>Where customers drop off</h2></div>
+  <div class="grid three">
+    <div class="card"><h2 style="font-size:15px">Meta ads funnel</h2><p class="sub">People who saw the ads → bought</p><div class="funnel" id="fMeta"></div></div>
+    <div class="card"><h2 style="font-size:15px">Website funnel (our own tracking)</h2><p class="sub">Visitor sessions on aaharyaorganics.com</p><div class="funnel" id="fSite"></div></div>
+    <div class="card"><h2 style="font-size:15px">Google Analytics funnel</h2><p class="sub">GA4 shopping events</p><div class="funnel" id="fGA"></div></div>
+  </div>
+</section>
+
+<section>
+  <div class="sectionhead"><h2>Meta ad campaigns</h2></div>
+  <div class="card scroll"><table id="tCamp"></table></div>
+  <div class="card scroll" style="margin-top:14px"><h2 style="font-size:15px">Ads (creatives)</h2><table id="tAds"></table></div>
+</section>
+
+<section>
+  <div class="sectionhead"><h2>Website traffic</h2><span class="tag">Google Analytics</span></div>
+  <div class="grid two">
+    <div class="card"><h2 style="font-size:15px">Visits per day</h2><div class="chartbox sm"><canvas id="cSess"></canvas></div></div>
+    <div class="card scroll"><h2 style="font-size:15px">Where visitors come from</h2><table id="tChan"></table></div>
+    <div class="card scroll"><h2 style="font-size:15px">Top sources</h2><table id="tSrc"></table></div>
+    <div class="card scroll"><h2 style="font-size:15px">Top landing pages</h2><table id="tPages"></table></div>
+  </div>
+</section>
+
+<section>
+  <div class="sectionhead"><h2>Aaharya CRM — website orders</h2><span class="tag">Store database</span></div>
+  <div class="grid three">
+    <div class="card"><h2 style="font-size:15px">Order status</h2><div class="chartbox sm"><canvas id="cStatus"></canvas></div></div>
+    <div class="card"><h2 style="font-size:15px">Customers</h2><div class="minis" id="custMinis"></div><div class="chartbox sm" style="height:150px;margin-top:10px"><canvas id="cRepeat"></canvas></div></div>
+    <div class="card"><h2 style="font-size:15px">Payment method</h2><div class="chartbox sm"><canvas id="cPay"></canvas></div></div>
+    <div class="card scroll"><h2 style="font-size:15px">Best-selling products</h2><table id="tProd"></table></div>
+    <div class="card scroll"><h2 style="font-size:15px">Top cities</h2><table id="tCity"></table></div>
+    <div class="card scroll"><h2 style="font-size:15px">Coupons used</h2><table id="tCoup"></table></div>
+    <div class="card scroll span2"><h2 style="font-size:15px">Recent orders</h2><table id="tRecent"></table></div>
+    <div class="card scroll"><h2 style="font-size:15px">Orders by day of week</h2><div class="chartbox sm"><canvas id="cDow"></canvas></div></div>
+  </div>
+</section>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const inr = (v, d = 0) => "₹" + Number(v || 0).toLocaleString("en-IN", { maximumFractionDigits: d, minimumFractionDigits: d });
+const n0 = (v) => Number(v || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 });
+const pct = (a, b) => (b ? ((a / b) * 100).toFixed(1) + "%" : "–");
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const istToday = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(new Date());
+const addDays = (s, k) => { const d = new Date(s + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + k); return d.toISOString().slice(0, 10); };
+
+let DATA = null, DAYS = 7, charts = {};
+try { DAYS = Number(localStorage.getItem("aah-days")) || 7; } catch {}
+const getPw = () => { try { return localStorage.getItem("aah-key") || ""; } catch { return ""; } };
+function savePw() { try { localStorage.setItem("aah-key", $("pw").value); } catch {} window._pw = $("pw").value; load(); }
+
+async function load(refreshKey) {
+  const key = window._pw || getPw();
+  const url = "/api/data" + (refreshKey ? "?refresh=" + encodeURIComponent(refreshKey) : "");
+  const res = await fetch(url, { headers: key ? { "x-dashboard-key": key } : {} });
+  if (res.status === 401) { $("login").style.display = "block"; $("app").style.display = "none"; return; }
+  const body = await res.json();
+  if (body.error) { alertBox(body.error); return; }
+  DATA = body; $("login").style.display = "none"; $("app").style.display = "block"; render();
+}
+function alertBox(msg) { $("notice").textContent = msg; }
+
+$("refreshBtn").onclick = () => {
+  let k = ""; try { k = localStorage.getItem("aah-refresh") || ""; } catch {}
+  if (!k) { k = window.prompt("Refresh key (ask your developer):") || ""; try { localStorage.setItem("aah-refresh", k); } catch {} }
+  if (k) { $("refreshBtn").textContent = "Refreshing…"; load(k).finally(() => ($("refreshBtn").textContent = "↻ Refresh")); }
+};
+document.querySelectorAll("#range button").forEach((b) => {
+  b.classList.toggle("on", Number(b.dataset.d) === DAYS);
+  b.onclick = () => { DAYS = Number(b.dataset.d); try { localStorage.setItem("aah-days", DAYS); } catch {}
+    document.querySelectorAll("#range button").forEach((x) => x.classList.toggle("on", x === b)); render(); };
+});
+
+function sumBy(rows, keyFn, fields) {
+  const m = new Map();
+  for (const r of rows) { const k = keyFn(r); const o = m.get(k) || { key: k }; for (const f of fields) o[f] = (o[f] || 0) + (Number(r[f]) || 0); m.set(k, o); }
+  return [...m.values()];
+}
+const total = (rows, f) => rows.reduce((s, r) => s + (Number(r[f]) || 0), 0);
+
+function render() {
+  const end = istToday(), start = addDays(end, -(DAYS - 1));
+  const inR = (r) => r && r.date >= start && r.date <= end;
+  const meta = DATA.meta || {}, ga = DATA.ga4 || {}, crm = DATA.crm || {};
+  const notes = [];
+  for (const [k, lbl] of [["meta", "Meta Ads"], ["ga4", "Google Analytics"], ["crm", "Store database"]]) {
+    const s = DATA[k] || {};
+    if (s.error) notes.push(`<b>${lbl}:</b> ${esc(s.error)}`);
+    else if (s.staleError) notes.push(`<b>${lbl}:</b> showing last saved numbers — latest refresh failed (${esc(s.staleError)})`);
+  }
+  $("notice").innerHTML = notes.join("<br>");
+  $("updated").textContent = DATA.updatedAt ? "Updated " + new Date(DATA.updatedAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" }) : "";
+
+  const mDaily = (meta.daily || []).filter(inR);
+  const gDaily = (ga.daily || []).filter(inR);
+  const allOrders = (crm.orders || []);
+  const orders = allOrders.filter(inR);
+  const good = orders.filter((o) => o.status !== "Cancelled" && o.status !== "Payment not completed");
+
+  // KPIs
+  const spend = total(mDaily, "spend"), revenue = total(good, "total"), nOrders = good.length;
+  const metaPurch = total(mDaily, "purchases"), metaVal = total(mDaily, "purchaseValue");
+  const sessions = total(gDaily, "sessions");
+  const siteSess = sumBy((crm.siteEvents || []).filter(inR), (r) => r.event, ["sessions"]);
+  const sv = (e) => (siteSess.find((x) => x.key === e) || {}).sessions || 0;
+  const visits = sessions || sv("page_view");
+  const kpis = [
+    ["Website sales", inr(revenue), `${nOrders} confirmed orders`],
+    ["Average order", nOrders ? inr(revenue / nOrders) : "–", "per confirmed order"],
+    ["Ad spend (Meta)", inr(spend), `${n0(total(mDaily, "clicks"))} link clicks`],
+    ["Return on ad spend", spend ? (revenue / spend).toFixed(2) + "×" : "–", "website sales ÷ ad spend"],
+    ["Cost per order", nOrders && spend ? inr(spend / nOrders) : "–", "ad spend ÷ all website orders"],
+    ["Purchases from ads", n0(metaPurch), metaVal ? `${inr(metaVal)} counted by Meta` : "as counted by Meta Pixel"],
+    ["Website visits", n0(visits), sessions ? "Google Analytics sessions" : "our own tracking"],
+    ["Visit → order rate", pct(nOrders, visits), "orders ÷ visits"]
+  ];
+  $("kpis").innerHTML = kpis.map(([l, v, h]) => `<div class="kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="h">${h}</div></div>`).join("");
+
+  // Trend
+  const dates = []; for (let i = 0; i < DAYS; i++) dates.push(addDays(start, i));
+  const byDate = (rows, f) => { const m = {}; rows.forEach((r) => (m[r.date] = (m[r.date] || 0) + (Number(r[f]) || 0))); return dates.map((d) => m[d] || 0); };
+  const ordCount = {}; good.forEach((o) => (ordCount[o.date] = (ordCount[o.date] || 0) + 1));
+  drawChart("cTrend", {
+    type: "bar",
+    data: { labels: dates.map(short), datasets: [
+      { label: "Website sales (₹)", data: byDate(good, "total"), backgroundColor: css("--olive"), borderRadius: 4, yAxisID: "y" },
+      { label: "Ad spend (₹)", data: byDate(mDaily, "spend"), type: "line", borderColor: css("--gold"), backgroundColor: css("--gold"), tension: .3, pointRadius: DAYS > 30 ? 0 : 3, yAxisID: "y" },
+      { label: "Orders", data: dates.map((d) => ordCount[d] || 0), type: "line", borderColor: css("--muted"), borderDash: [4, 4], pointRadius: 0, yAxisID: "y2" }
+    ] },
+    options: { scales: { y: { beginAtZero: true, ticks: { callback: (v) => "₹" + n0(v) } }, y2: { beginAtZero: true, position: "right", grid: { display: false }, ticks: { precision: 0 } } } }
+  });
+
+  // Funnels
+  funnel("fMeta", [["Saw the ad", total(mDaily, "impressions")], ["Clicked", total(mDaily, "clicks")], ["Page loaded", total(mDaily, "landing")], ["Viewed product", total(mDaily, "views")], ["Added to cart", total(mDaily, "carts")], ["Checkout", total(mDaily, "checkouts")], ["Purchased", metaPurch]], meta.error);
+  funnel("fSite", [["Visited", sv("page_view")], ["Viewed product", sv("product_view")], ["Added to cart", sv("add_to_cart")], ["Checkout", sv("checkout_started")], ["Order placed", sv("order_completed")]], crm.error);
+  const gev = sumBy((ga.events || []).filter(inR), (r) => r.event, ["count"]);
+  const gv = (e) => (gev.find((x) => x.key === e) || {}).count || 0;
+  funnel("fGA", [["Sessions", sessions], ["Viewed product", gv("view_item")], ["Added to cart", gv("add_to_cart")], ["Checkout", gv("begin_checkout")], ["Purchased", gv("purchase")]], ga.error);
+
+  // Campaign + ad tables
+  const F = ["spend", "impressions", "clicks", "landing", "carts", "checkouts", "purchases", "purchaseValue"];
+  const camp = sumBy((meta.campaignsDaily || []).filter(inR), (r) => r.campaign, F).sort((a, b) => b.spend - a.spend);
+  const ads = sumBy((meta.adsDaily || []).filter(inR), (r) => r.campaign + " › " + r.ad, F).sort((a, b) => b.spend - a.spend);
+  const adHead = `<tr><th>Name</th><th class="n">Spend</th><th class="n">Seen</th><th class="n">Clicks</th><th class="n">CTR</th><th class="n">Cost/click</th><th class="n">Carts</th><th class="n">Purchases</th><th class="n">Cost/purchase</th><th class="n">ROAS</th></tr>`;
+  const adRow = (r) => `<tr><td>${esc(r.key)}</td><td class="n">${inr(r.spend)}</td><td class="n">${n0(r.impressions)}</td><td class="n">${n0(r.clicks)}</td><td class="n">${pct(r.clicks, r.impressions)}</td><td class="n">${r.clicks ? inr(r.spend / r.clicks, 2) : "–"}</td><td class="n">${n0(r.carts)}</td><td class="n">${n0(r.purchases)}</td><td class="n">${r.purchases ? inr(r.spend / r.purchases) : "–"}</td><td class="n">${r.spend && r.purchaseValue ? (r.purchaseValue / r.spend).toFixed(2) + "×" : "–"}</td></tr>`;
+  table("tCamp", adHead, camp.map(adRow), meta.error ? "Connect Meta Ads to see campaigns" : "No ad spend in this period");
+  table("tAds", adHead, ads.slice(0, 15).map(adRow), "No ads ran in this period");
+
+  // GA4 traffic
+  drawChart("cSess", { type: "line", data: { labels: dates.map(short), datasets: [
+    { label: "Sessions", data: byDate(gDaily, "sessions"), borderColor: css("--olive"), backgroundColor: css("--olive") + "33", fill: true, tension: .3, pointRadius: 0 },
+    { label: "New users", data: byDate(gDaily, "newUsers"), borderColor: css("--gold"), tension: .3, pointRadius: 0 }
+  ] }, options: { scales: { y: { beginAtZero: true } } } });
+  const ch = sumBy((ga.channels || []).filter(inR), (r) => r.channel, ["sessions", "purchases", "revenue"]).sort((a, b) => b.sessions - a.sessions);
+  table("tChan", `<tr><th>Channel</th><th class="n">Visits</th><th class="n">Share</th><th class="n">Purchases</th><th class="n">Sales</th></tr>`,
+    ch.map((r) => `<tr><td>${esc(r.key)}</td><td class="n">${n0(r.sessions)}</td><td class="n">${pct(r.sessions, sessions)}</td><td class="n">${n0(r.purchases)}</td><td class="n">${inr(r.revenue)}</td></tr>`), ga.error ? "Connect Google Analytics" : "No visits yet");
+  const src = sumBy((ga.sources || []).filter(inR), (r) => r.source, ["sessions", "purchases"]).sort((a, b) => b.sessions - a.sessions).slice(0, 10);
+  table("tSrc", `<tr><th>Source / medium</th><th class="n">Visits</th><th class="n">Purchases</th></tr>`, src.map((r) => `<tr><td>${esc(r.key)}</td><td class="n">${n0(r.sessions)}</td><td class="n">${n0(r.purchases)}</td></tr>`), "No data");
+  const pg = sumBy((ga.pages || []).filter(inR), (r) => r.page, ["sessions"]).sort((a, b) => b.sessions - a.sessions).slice(0, 10);
+  table("tPages", `<tr><th>Page</th><th class="n">Visits</th></tr>`, pg.map((r) => `<tr><td>${esc(r.key)}</td><td class="n">${n0(r.sessions)}</td></tr>`), "No data");
+
+  // CRM
+  const st = sumBy(orders, (o) => o.status, ["total"]).map((x) => ({ ...x, c: orders.filter((o) => o.status === x.key).length })).sort((a, b) => b.c - a.c);
+  const pal = [css("--olive"), css("--gold"), css("--green"), css("--gold2"), css("--bad"), css("--muted")];
+  drawChart("cStatus", { type: "doughnut", data: { labels: st.map((x) => x.key), datasets: [{ data: st.map((x) => x.c), backgroundColor: pal, borderColor: css("--card") }] }, options: { cutout: "62%", plugins: { legend: { position: "right" } } } });
+  const pay = sumBy(good, (o) => o.payment, ["total"]).map((x) => ({ ...x, c: good.filter((o) => o.payment === x.key).length }));
+  drawChart("cPay", { type: "doughnut", data: { labels: pay.map((x) => `${x.key} (${x.c})`), datasets: [{ data: pay.map((x) => x.c), backgroundColor: [css("--olive"), css("--gold")], borderColor: css("--card") }] }, options: { cutout: "62%", plugins: { legend: { position: "right" } } } });
+
+  const buyers = new Set(good.map((o) => o.customer).filter(Boolean));
+  const repeatOrders = good.filter((o) => o.repeat).length;
+  const allBuyers = new Set(allOrders.filter((o) => o.status !== "Cancelled" && o.status !== "Payment not completed").map((o) => o.customer).filter(Boolean));
+  const t = crm.totals || {};
+  $("custMinis").innerHTML = [
+    ["Buyers in period", n0(buyers.size)], ["Repeat orders", `${n0(repeatOrders)} (${pct(repeatOrders, nOrders)})`],
+    ["All-time buyers", n0(allBuyers.size)], ["Abandoned carts", t.abandonedCarts == null ? "–" : n0(t.abandonedCarts)]
+  ].map(([l, v]) => `<div class="mini"><div class="l">${l}</div><div class="v">${v}</div></div>`).join("");
+  drawChart("cRepeat", { type: "bar", data: { labels: ["New customer", "Repeat customer"], datasets: [{ label: "Sales (₹)", data: [total(good.filter((o) => !o.repeat), "total"), total(good.filter((o) => o.repeat), "total")], backgroundColor: [css("--olive"), css("--gold")], borderRadius: 4 }] }, options: { indexAxis: "y", plugins: { legend: { display: false } }, scales: { x: { ticks: { callback: (v) => "₹" + n0(v) } } } } });
+
+  const items = []; good.forEach((o) => (o.items || []).forEach((i) => items.push(i)));
+  const prod = sumBy(items, (i) => i.name, ["qty", "amount"]).sort((a, b) => b.amount - a.amount).slice(0, 10);
+  table("tProd", `<tr><th>Product</th><th class="n">Units</th><th class="n">Sales</th></tr>`, prod.map((r) => `<tr><td>${esc(r.key)}</td><td class="n">${n0(r.qty)}</td><td class="n">${inr(r.amount)}</td></tr>`), crm.error ? "Connect the store database" : "No orders in this period");
+  const city = sumBy(good, (o) => (o.city || "Unknown").replace(/\b\w/g, (c) => c.toUpperCase()), ["total"]).map((x) => ({ ...x, c: good.filter((o) => (o.city || "Unknown").toLowerCase() === x.key.toLowerCase()).length })).sort((a, b) => b.total - a.total).slice(0, 10);
+  table("tCity", `<tr><th>City</th><th class="n">Orders</th><th class="n">Sales</th></tr>`, city.map((r) => `<tr><td>${esc(r.key)}</td><td class="n">${r.c}</td><td class="n">${inr(r.total)}</td></tr>`), "No orders in this period");
+  const coup = sumBy(good.filter((o) => o.coupon), (o) => o.coupon, ["discount", "total"]).map((x) => ({ ...x, c: good.filter((o) => o.coupon === x.key).length })).sort((a, b) => b.c - a.c);
+  table("tCoup", `<tr><th>Coupon</th><th class="n">Orders</th><th class="n">Discount given</th><th class="n">Sales</th></tr>`, coup.map((r) => `<tr><td>${esc(r.key)}</td><td class="n">${r.c}</td><td class="n">${inr(r.discount)}</td><td class="n">${inr(r.total)}</td></tr>`), "No coupons used in this period");
+  const recent = [...orders].sort((a, b) => b.ts - a.ts).slice(0, 12);
+  table("tRecent", `<tr><th>Date</th><th>Order</th><th>Customer</th><th>City</th><th>Items</th><th>Payment</th><th>Status</th><th class="n">Total</th></tr>`,
+    recent.map((o) => `<tr><td>${new Date(o.ts).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })}</td><td>${esc(o.id)}</td><td>${esc(o.firstName)}${o.repeat ? ' <span class="pill">repeat</span>' : ""}</td><td>${esc(o.city)}</td><td>${esc((o.items || []).map((i) => `${i.name} ×${i.qty}`).join(", "))}</td><td>${esc(o.payment)}</td><td><span class="pill ${esc(o.status.split(" ")[0])}">${esc(o.status)}</span></td><td class="n">${inr(o.total)}</td></tr>`), "No orders in this period");
+  const dowN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"], dow = [0, 0, 0, 0, 0, 0, 0];
+  good.forEach((o) => dow[new Date(o.date + "T00:00:00Z").getUTCDay()]++);
+  drawChart("cDow", { type: "bar", data: { labels: dowN, datasets: [{ label: "Orders", data: dow, backgroundColor: css("--olive"), borderRadius: 4 }] }, options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } } });
+}
+
+function short(d) { return new Date(d + "T00:00:00Z").toLocaleDateString("en-IN", { day: "numeric", month: "short", timeZone: "UTC" }); }
+function table(id, head, rows, emptyMsg) { $(id).innerHTML = rows.length ? head + rows.join("") : `<tr><td class="empty">${emptyMsg}</td></tr>`; }
+function funnel(id, steps, err) {
+  if (err || !steps[0][1]) { $(id).innerHTML = `<div class="empty">${err ? "Not connected yet" : "No data in this period"}</div>`; return; }
+  const max = Math.max(...steps.map((s) => s[1]), 1);
+  $(id).innerHTML = steps.map(([l, v], i) => {
+    const prev = i ? steps[i - 1][1] : 0;
+    const drop = i && prev ? `<div class="drop">${pct(v, prev)} of previous step</div>` : "";
+    return `<div class="row"><div class="lab">${l}</div><div class="bar"><i style="width:${Math.max(2, (v / max) * 100)}%"></i></div><div class="val">${n0(v)}</div>${drop}</div>`;
+  }).join("");
+}
+function drawChart(id, cfg) {
+  if (charts[id]) charts[id].destroy();
+  Chart.defaults.color = css("--muted"); Chart.defaults.font.family = "Inter, system-ui, sans-serif"; Chart.defaults.borderColor = css("--line");
+  cfg.options = Object.assign({ responsive: true, maintainAspectRatio: false, interaction: { mode: "index", intersect: false }, plugins: {} }, cfg.options || {});
+  cfg.options.plugins.legend = cfg.options.plugins.legend || { labels: { boxWidth: 12 } };
+  charts[id] = new Chart($(id), cfg);
+}
+load().catch((e) => { $("app").style.display = "block"; alertBox("Could not load data: " + e.message); });
+</script>
+</body>
+</html>

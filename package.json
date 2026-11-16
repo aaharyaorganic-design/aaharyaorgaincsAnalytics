@@ -1,0 +1,10 @@
+{
+  "name": "aaharya-dashboard",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@google-analytics/data": "^4.12.0",
+    "@netlify/blobs": "^8.1.0",
+    "firebase-admin": "^12.7.0"
+  }
+}
